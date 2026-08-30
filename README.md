@@ -29,23 +29,29 @@ A complete AI assistant with persistent memory, voice capabilities, and a web in
 ```bash
 git clone https://github.com/malek878saleh/asimov-ai.git
 cd asimov-ai
-git checkout test2```
+git checkout test2
+```
 
 ### 2. Start the services
-bash
+```bash
 docker-compose up -d --build
-3. Pull the AI models
-bash
+```
+### 3. Pull the AI models
+```bash
 docker exec -it ollama ollama pull dolphin-phi:latest
 docker exec -it ollama ollama pull nomic-embed-text:latest
-4. Access the application
+```
+
+### 4. Access the application
+
 Frontend: http://localhost:3000
 
 Backend API: http://localhost:8000
 
 Ollama API: http://localhost:11434
 
-Project Structure
+### Project Structure
+```
 text
 asimov-ai/
 ├── backend/
@@ -67,7 +73,9 @@ asimov-ai/
 │   └── Dockerfile
 ├── docker-compose.yml
 └── README.md
-API Endpoints
+```
+
+### API Endpoints
 Method	Endpoint	Description
 POST	/api/chat	Send a message
 POST	/api/memory/search	Search memories
@@ -75,7 +83,10 @@ POST	/api/voice/tts	Text-to-speech
 POST	/api/voice/stt	Speech-to-text
 POST	/api/files/upload	Upload files
 WebSocket	/ws/{user_id}/{session_id}	Real-time chat
-Deployment on Contabo
+
+
+## Deployment on Contabo
+
 SSH into your Contabo VPS
 
 Clone the repository
@@ -86,20 +97,21 @@ Open ports 3000, 8000, 11434 in firewall
 
 Access via your VPS IP
 
-Development
-Backend
-bash
+### Backend
+```bash
 cd backend
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload
-Frontend
+```
+### Frontend
 
 ```bash
 cd frontend
 npm install
-npm run dev```
+npm run dev
+```
 
-Contributing
+## Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.
