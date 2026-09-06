@@ -78,3 +78,35 @@ coverage/
 .mypy_cache/
 .ruff_cache/
 .vite/
+
+# Memory and vector databases
+chroma_db/
+chromadb/
+vector_store/
+vectordb/
+*.chroma
+*.chromadb
+*.chroma.sqlite3
+
+# Uploads and user data
+uploads/
+uploads/*
+!uploads/.gitkeep
+user_data/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache directories
+.cache/
+cache/
+memory_cache/
+embeddings_cache/
+sessions/
