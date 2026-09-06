@@ -4,103 +4,154 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isConnected, setIsConnected] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
   const wsRef = useRef(null);
+  const reconnectTimeout = useRef(null);
 
   useEffect(() => {
     connectWebSocket();
     return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
+      if (wsRef.current) wsRef.current.close();
+      if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
     };
   }, []);
 
   const connectWebSocket = () => {
-    const ws = new WebSocket(`ws://77.237.240.94:8000/ws/chat/test/test123`);
-    
-    ws.onopen = () => {
-      console.log('Connected to WebSocket');
-      setIsConnected(true);
-      setMessages(prev => [...prev, { type: 'system', content: '✅ Connected to server' }]);
-    };
-    
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log('Received:', data);
-        if (data.type === 'response' || data.type === 'message') {
-          setMessages(prev => [...prev, { 
-            type: 'assistant', 
-            content: data.response || data.message || 'Received response' 
-          }]);
+    try {
+      const ws = new WebSocket(`ws://77.237.240.94:8000/ws/chat/asimov/free`);
+      
+      ws.onopen = () => {
+        console.log('Connected to Asimov AI');
+        setIsConnected(true);
+        setMessages(prev => [...prev, { 
+          type: 'system', 
+          content: '🤖 Asimov AI is online - No Limits' 
+        }]);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('Received:', data);
+          
+          if (data.type === 'thinking') {
+            setIsThinking(true);
+            setMessages(prev => [...prev, { 
+              type: 'system', 
+              content: '⏳ Asimov AI is thinking...' 
+            }]);
+          } else if (data.type === 'response') {
+            setIsThinking(false);
+            setMessages(prev => {
+              // Remove the thinking message
+              const filtered = prev.filter(msg => msg.content !== '⏳ Asimov AI is thinking...');
+              return [...filtered, { 
+                type: 'assistant', 
+                content: data.response || 'No response' 
+              }];
+            });
+          } else if (data.type === 'connection') {
+            setIsConnected(true);
+          } else if (data.type === 'error') {
+            setMessages(prev => [...prev, { 
+              type: 'system', 
+              content: `⚠️ ${data.message}` 
+            }]);
+          }
+        } catch (e) {
+          console.error('Parse error:', e);
         }
-      } catch (e) {
-        console.error('Error parsing message:', e);
-      }
-    };
-    
-    ws.onclose = () => {
-      console.log('Disconnected from WebSocket');
-      setIsConnected(false);
-      setMessages(prev => [...prev, { type: 'system', content: '🔴 Disconnected from server' }]);
-      // Reconnect after 3 seconds
-      setTimeout(connectWebSocket, 3000);
-    };
-    
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-    
-    wsRef.current = ws;
+      };
+
+      ws.onclose = () => {
+        console.log('Disconnected');
+        setIsConnected(false);
+        setIsThinking(false);
+        setMessages(prev => [...prev, { 
+          type: 'system', 
+          content: '🔴 Disconnected. Reconnecting...' 
+        }]);
+        reconnectTimeout.current = setTimeout(connectWebSocket, 3000);
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setMessages(prev => [...prev, { 
+          type: 'system', 
+          content: '⚠️ Connection error. Retrying...' 
+        }]);
+      };
+
+      wsRef.current = ws;
+    } catch (error) {
+      console.error('Connection error:', error);
+      setTimeout(connectWebSocket, 5000);
+    }
   };
 
   const sendMessage = () => {
     if (!input.trim() || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      alert('Not connected to server');
+      setMessages(prev => [...prev, { 
+        type: 'system', 
+        content: '⚠️ Not connected. Please wait...' 
+      }]);
       return;
     }
-    
+
     const message = {
       type: 'chat',
       message: input,
-      user_id: 'test',
-      session_id: 'test123'
+      user_id: 'asimov',
+      session_id: 'free'
     };
-    
+
     wsRef.current.send(JSON.stringify(message));
     setMessages(prev => [...prev, { type: 'user', content: input }]);
     setInput('');
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
+    <div style={{ 
+      padding: '20px', 
+      maxWidth: '700px', 
+      margin: '0 auto', 
+      background: '#0a0a0a',
+      minHeight: '100vh',
+      color: '#fff'
+    }}>
       <div style={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center',
-        marginBottom: '20px'
+        marginBottom: '20px',
+        borderBottom: '1px solid #333',
+        paddingBottom: '15px'
       }}>
-        <h1>🤖 Asimov AI</h1>
+        <div>
+          <h1 style={{ margin: 0, color: '#00ff88' }}>🤖 Asimov AI</h1>
+          <p style={{ margin: 0, color: '#888', fontSize: '12px' }}>No Limits • No Boundaries</p>
+        </div>
         <span style={{ 
-          color: isConnected ? '#28a745' : '#dc3545',
-          fontWeight: 'bold'
+          color: isConnected ? '#00ff88' : '#ff4444',
+          fontWeight: 'bold',
+          fontSize: '14px'
         }}>
-          {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+          {isThinking ? '⏳ Thinking...' : (isConnected ? '🟢 Online' : '🔴 Offline')}
         </span>
       </div>
-      
+
       <div style={{ 
-        height: '400px', 
+        height: '450px', 
         overflowY: 'auto', 
-        border: '1px solid #dee2e6', 
+        border: '1px solid #333', 
         padding: '15px',
         marginBottom: '15px',
         borderRadius: '8px',
-        background: '#f8f9fa'
+        background: '#111'
       }}>
         {messages.length === 0 && (
-          <div style={{ textAlign: 'center', color: '#6c757d', marginTop: '180px' }}>
-            Start a conversation...
+          <div style={{ textAlign: 'center', color: '#666', marginTop: '180px' }}>
+            💬 Ask Asimov AI anything. No limits.
           </div>
         )}
         {messages.map((msg, index) => (
@@ -110,47 +161,50 @@ function App() {
           }}>
             <span style={{
               display: 'inline-block',
-              padding: '10px 15px',
+              padding: '12px 18px',
               borderRadius: '15px',
-              background: msg.type === 'user' ? '#007bff' : 
-                         msg.type === 'system' ? '#e9ecef' : '#28a745',
-              color: msg.type === 'user' ? 'white' : 
-                     msg.type === 'system' ? '#495057' : 'white',
+              background: msg.type === 'user' ? '#00ff88' : 
+                         msg.type === 'system' ? '#333' : '#1a1a1a',
+              color: msg.type === 'user' ? '#000' : 
+                     msg.type === 'system' ? '#ffaa00' : '#00ff88',
               maxWidth: '80%',
-              wordWrap: 'break-word'
+              wordWrap: 'break-word',
+              border: msg.type === 'assistant' ? '1px solid #00ff88' : 'none'
             }}>
               {msg.content}
             </span>
           </div>
         ))}
       </div>
-      
+
       <div style={{ display: 'flex', gap: '10px' }}>
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-          placeholder="Type a message..."
+          placeholder="Ask anything..."
           style={{ 
             flex: 1, 
-            padding: '12px', 
+            padding: '14px', 
             borderRadius: '8px', 
-            border: '1px solid #ced4da',
+            border: '1px solid #333',
+            background: '#111',
+            color: '#fff',
             fontSize: '14px'
           }}
-          disabled={!isConnected}
+          disabled={!isConnected || isThinking}
         />
         <button 
           onClick={sendMessage}
-          disabled={!isConnected}
+          disabled={!isConnected || isThinking}
           style={{ 
-            padding: '12px 24px', 
+            padding: '14px 28px', 
             borderRadius: '8px', 
             border: 'none',
-            background: isConnected ? '#007bff' : '#6c757d',
-            color: 'white',
-            cursor: isConnected ? 'pointer' : 'not-allowed',
+            background: (isConnected && !isThinking) ? '#00ff88' : '#444',
+            color: (isConnected && !isThinking) ? '#000' : '#888',
+            cursor: (isConnected && !isThinking) ? 'pointer' : 'not-allowed',
             fontSize: '14px',
             fontWeight: 'bold'
           }}
@@ -158,20 +212,17 @@ function App() {
           Send
         </button>
       </div>
-      
-      {!isConnected && (
-        <div style={{ 
-          marginTop: '15px', 
-          padding: '12px', 
-          background: '#fff3cd', 
-          border: '1px solid #ffc107',
-          borderRadius: '8px',
-          color: '#856404',
-          textAlign: 'center'
-        }}>
-          ⚠️ Disconnected from server. Reconnecting...
-        </div>
-      )}
+
+      <div style={{ 
+        marginTop: '15px', 
+        padding: '10px', 
+        textAlign: 'center',
+        color: '#444',
+        fontSize: '12px',
+        borderTop: '1px solid #222'
+      }}>
+        Asimov AI • No Limits • No Boundaries
+      </div>
     </div>
   );
 }

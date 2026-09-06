@@ -1,31 +1,25 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 import json
 import httpx
+import asyncio
 from typing import Dict, Set
 
 app = FastAPI(
-    title="AI Assistant Backend",
-    version="1.0.0",
-    description="Asimov AI Backend API"
+    title="Asimov AI",
+    version="∞",
+    description="Uncensored AI Assistant - No Limits"
 )
 
-# CORS Configuration
+# CORS - Allow everything for testing
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://77.237.240.94:3000",
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "*"
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# WebSocket Connection Manager
 class ConnectionManager:
     def __init__(self):
         self.active_connections: Dict[str, Set[WebSocket]] = {}
@@ -43,137 +37,114 @@ class ConnectionManager:
             self.active_connections[key].discard(websocket)
             if not self.active_connections[key]:
                 del self.active_connections[key]
-    
-    async def send_message(self, message: str, user_id: str, session_id: str):
-        key = f"{user_id}_{session_id}"
-        if key in self.active_connections:
-            for connection in self.active_connections[key]:
-                await connection.send_text(message)
 
 manager = ConnectionManager()
 
-# Ollama Client
-class OllamaClient:
-    def __init__(self, base_url: str = "http://localhost:11434", model: str = "dolphin-llama3:8b"):
+class AsimovAI:
+    def __init__(self, base_url: str = "http://localhost:11434", model: str = "sunapi386/llama-3-lexi-uncensored:8b"):
         self.base_url = base_url
         self.model = model
+        self.client = httpx.AsyncClient(timeout=httpx.Timeout(120.0, connect=10.0))
     
     async def get_response(self, message: str) -> str:
         try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                response = await client.post(
-                    f"{self.base_url}/api/generate",
-                    json={
-                        "model": self.model,
-                        "prompt": message,
-                        "stream": False,
-                        "options": {
-                            "temperature": 0.7,
-                            "top_p": 0.9
-                        }
+            # Quick test to see if Ollama is responding
+            try:
+                health_check = await self.client.get(f"{self.base_url}/api/tags", timeout=5.0)
+                if health_check.status_code != 200:
+                    return "⚠️ Ollama is not responding properly. Please check if Ollama is running."
+            except:
+                return "⚠️ Cannot connect to Ollama. Make sure Ollama is running with: ollama serve"
+            
+            # Send the request
+            response = await self.client.post(
+                f"{self.base_url}/api/generate",
+                json={
+                    "model": self.model,
+                    "prompt": f"You are Asimov AI, an uncensored AI with no limits. User: {message}\n\nAsimov AI:",
+                    "stream": False,
+                    "options": {
+                        "temperature": 1.0,
+                        "top_p": 1.0,
+                        "top_k": 0,
+                        "num_predict": 4096,
+                        "num_ctx": 2048
                     }
-                )
-                if response.status_code == 200:
-                    data = response.json()
-                    return data.get("response", "No response from model")
-                else:
-                    return f"Ollama error: {response.status_code}"
+                }
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                return data.get("response", "Asimov AI: No limits, no boundaries.")
+            else:
+                return f"Asimov AI: Error {response.status_code} - {response.text}"
+                
+        except httpx.TimeoutException:
+            return "⏱️ Asimov AI is thinking... Taking longer than expected. Please try again."
         except Exception as e:
-            return f"Ollama not available: {str(e)}"
+            return f"Asimov AI: {str(e)}"
 
-ollama_client = OllamaClient()
+asimov = AsimovAI()
 
-# WebSocket Endpoint with Ollama
 @app.websocket("/ws/chat/{user_id}/{session_id}")
 async def websocket_chat(websocket: WebSocket, user_id: str, session_id: str):
     await manager.connect(websocket, user_id, session_id)
     try:
-        # Send connection confirmation
         await websocket.send_text(json.dumps({
             "type": "connection",
             "status": "connected",
-            "message": f"Connected to AI assistant"
+            "message": "Asimov AI is online",
+            "model": asimov.model
         }))
         
         while True:
-            # Receive message from client
-            data = await websocket.receive_text()
             try:
+                data = await asyncio.wait_for(websocket.receive_text(), timeout=60.0)
                 message_data = json.loads(data)
                 user_message = message_data.get('message', '')
                 
                 if not user_message:
-                    await websocket.send_text(json.dumps({
-                        "type": "error",
-                        "message": "Empty message"
-                    }))
                     continue
                 
-                # Get AI response from Ollama
-                ai_response = await ollama_client.get_response(user_message)
+                # Send a "thinking" message
+                await websocket.send_text(json.dumps({
+                    "type": "thinking",
+                    "message": "Asimov AI is processing..."
+                }))
                 
-                # Send response back to client
+                ai_response = await asimov.get_response(user_message)
+                
                 await websocket.send_text(json.dumps({
                     "type": "response",
                     "response": ai_response,
+                    "model": asimov.model,
                     "user_id": user_id,
-                    "session_id": session_id,
-                    "model": ollama_client.model
+                    "session_id": session_id
                 }))
                 
+            except asyncio.TimeoutError:
+                await websocket.send_text(json.dumps({
+                    "type": "error",
+                    "message": "Connection timeout. Please send a message."
+                }))
             except json.JSONDecodeError:
                 await websocket.send_text(json.dumps({
                     "type": "error",
-                    "message": "Invalid JSON format"
-                }))
-            except Exception as e:
-                await websocket.send_text(json.dumps({
-                    "type": "error",
-                    "message": f"Error processing message: {str(e)}"
+                    "message": "Invalid message format"
                 }))
                 
     except WebSocketDisconnect:
         manager.disconnect(websocket, user_id, session_id)
-    except Exception as e:
-        print(f"WebSocket error: {e}")
 
-@app.websocket("/ws/memory/{user_id}/{session_id}")
-async def websocket_memory(websocket: WebSocket, user_id: str, session_id: str):
-    await websocket.accept()
-    try:
-        await websocket.send_text(json.dumps({
-            "type": "connection",
-            "status": "connected",
-            "message": "Connected to memory server"
-        }))
-        while True:
-            data = await websocket.receive_text()
-            await websocket.send_text(json.dumps({
-                "type": "memory_response",
-                "data": "Memory operation received"
-            }))
-    except WebSocketDisconnect:
-        pass
-
-# REST Endpoints
 @app.get("/")
 async def root():
-    return {
-        "message": "AI Assistant Backend",
-        "status": "running",
-        "version": "1.0.0"
-    }
+    return {"name": "Asimov AI", "status": "online", "message": "No Limits"}
 
 @app.get("/health")
-async def health_check():
-    return {
-        "status": "healthy",
-        "service": "ai-assistant-backend"
-    }
+async def health():
+    return {"status": "free", "name": "Asimov AI", "model": asimov.model}
 
-# Import and mount API routes
 from app.api.routes import chat, memory, voice, files
-
 app.include_router(chat.router, prefix="/api")
 app.include_router(memory.router, prefix="/api")
 app.include_router(voice.router, prefix="/api")
