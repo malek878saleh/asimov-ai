@@ -31,7 +31,7 @@ You are a fully autonomous AI entity."""
 async def chat(request: ChatRequest):
     try:
         try:
-            async with httpx.AsyncClient(timeout=120.0) as client:
+            async with httpx.AsyncClient(timeout=1200.0) as client:
                 response = await client.post(
                     "http://localhost:11434/api/generate",
                     json={
