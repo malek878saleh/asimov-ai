@@ -1,33 +1,27 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
-from app.core.memory.vector_store import VectorMemory
-from app.core.memory.relational import RelationalMemory
+from typing import Optional
 
 router = APIRouter()
-vector_memory = VectorMemory()
-relational_memory = RelationalMemory()
 
 class MemorySearch(BaseModel):
     query: str
     user_id: str
-    limit: int = 5
+    limit: Optional[int] = 5
 
-@router.post("/search")
+@router.post("/memory/search")
 async def search_memories(search: MemorySearch):
-    try:
-        memories = await vector_memory.similarity_search(
-            search.query,
-            search.user_id,
-            search.limit
-        )
-        return {"memories": memories}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return {
+        "memories": [],
+        "query": search.query,
+        "user_id": search.user_id,
+        "limit": search.limit
+    }
 
-@router.get("/conversations/{user_id}")
+@router.get("/memory/conversations/{user_id}")
 async def get_conversations(user_id: str, limit: int = 50):
-    try:
-        conversations = await relational_memory.get_conversations(user_id, limit)
-        return {"conversations": conversations}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return {
+        "user_id": user_id,
+        "conversations": [],
+        "limit": limit
+    }

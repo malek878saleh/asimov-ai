@@ -20,7 +20,7 @@ function FileUpload({ userID }) {
     formData.append('user_id', userID);
 
     try {
-      const response = await fetch('http://localhost:8000/api/files/upload', {
+      const response = await fetch('http://77.237.240.94:8000/api/files/upload', {
         method: 'POST',
         body: formData,
       });

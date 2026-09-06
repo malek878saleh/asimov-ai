@@ -25,7 +25,7 @@ function VoiceControls({ userID, sessionID }) {
 
         // Send to backend for transcription
         try {
-          const response = await fetch('http://localhost:8000/api/voice/transcribe', {
+          const response = await fetch('http://77.237.240.94:8000/api/voice/transcribe', {
             method: 'POST',
             body: formData,
           });
@@ -58,7 +58,7 @@ function VoiceControls({ userID, sessionID }) {
   const speakResponse = async (text) => {
     try {
       setIsSpeaking(true);
-      const response = await fetch('http://localhost:8000/api/voice/tts', {
+      const response = await fetch('http://77.237.240.94:8000/api/voice/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),

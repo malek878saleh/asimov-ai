@@ -1,65 +1,63 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 
-function useVoice() {
-  const [isListening, setIsListening] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const mediaRecorder = useRef(null);
-  const audioChunks = useRef([]);
+const SERVER_IP = import.meta.env.VITE_API_URL || 
+                  import.meta.env.REACT_APP_API_URL || 
+                  'http://77.237.240.94:8000';
 
-  const startListening = async () => {
+export function useVoice() {
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioUrl, setAudioUrl] = useState(null);
+
+  const textToSpeech = async (text) => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder.current = new MediaRecorder(stream);
-      audioChunks.current = [];
-      mediaRecorder.current.ondataavailable = (event) => audioChunks.current.push(event.data);
-      mediaRecorder.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunks.current, { type: 'audio/wav' });
-        setIsListening(false);
-        return audioBlob;
-      };
-      mediaRecorder.current.start();
-      setIsListening(true);
-    } catch (error) {
-      console.error('Microphone error:', error);
-      throw error;
-    }
-  };
-
-  const stopListening = () => {
-    if (mediaRecorder.current && isListening) {
-      mediaRecorder.current.stop();
-      mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
-      setIsListening(false);
-    }
-  };
-
-  const speak = async (text) => {
-    setIsSpeaking(true);
-    try {
-      const response = await fetch('http://localhost:8000/api/voice/tts', {
+      const response = await fetch(`${SERVER_IP}/api/voice/tts`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text, voice: 'default' })
       });
-      const audioBlob = await response.blob();
-      const url = URL.createObjectURL(audioBlob);
-      const audio = new Audio(url);
-      return new Promise((resolve) => {
-        audio.onended = () => {
-          setIsSpeaking(false);
-          URL.revokeObjectURL(url);
-          resolve();
-        };
-        audio.play();
-      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
     } catch (error) {
-      console.error('TTS error:', error);
-      setIsSpeaking(false);
+      console.error('TTS Error:', error);
       throw error;
     }
   };
 
-  return { isListening, isSpeaking, startListening, stopListening, speak };
-}
+  const speechToText = async (audioBlob) => {
+    try {
+      const formData = new FormData();
+      formData.append('audio', audioBlob);
+      
+      const response = await fetch(`${SERVER_IP}/api/voice/stt`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('STT Error:', error);
+      throw error;
+    }
+  };
 
-export default useVoice;
+  return {
+    isRecording,
+    setIsRecording,
+    audioUrl,
+    setAudioUrl,
+    textToSpeech,
+    speechToText
+  };
+}

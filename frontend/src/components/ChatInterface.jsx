@@ -8,7 +8,7 @@ function ChatInterface({ userID, sessionID }) {
   const messagesEndRef = useRef(null);
   
   const { sendMessage, isConnected, lastMessage } = useWebSocket(
-    `ws://localhost:8000/ws/chat/${userID}/${sessionID}`
+    `ws://77.237.240.94:8000/ws/chat/${userID}/${sessionID}`
   );
 
   useEffect(() => {

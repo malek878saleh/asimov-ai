@@ -8,7 +8,7 @@ function MemoryPanel({ userID }) {
   const searchMemories = async () => {
     if (!searchQuery.trim()) return;
     try {
-      const response = await fetch('http://localhost:8000/api/memory/search', {
+      const response = await fetch('http://77.237.240.94:8000/api/memory/search', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: searchQuery, user_id: userID, limit: 10 }),
       });

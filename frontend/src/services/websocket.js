@@ -1,44 +1,19 @@
-class WebSocketService {
-  constructor() {
-    this.ws = null;
-    this.handlers = [];
-  }
+// WebSocket Configuration
+const SERVER_IP = import.meta.env.VITE_WS_URL || 
+                  import.meta.env.REACT_APP_WS_URL || 
+                  'ws://77.237.240.94:8000';
 
-  connect(userID, sessionID) {
-    const url = `ws://localhost:8000/ws/${userID}/${sessionID}`;
-    this.ws = new WebSocket(url);
-    
-    this.ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        this.handlers.forEach(handler => handler(data));
-      } catch (e) {
-        console.error('WebSocket message error:', e);
-      }
-    };
-    
-    this.ws.onopen = () => console.log('WebSocket connected');
-    this.ws.onclose = () => console.log('WebSocket disconnected');
-    this.ws.onerror = (error) => console.error('WebSocket error:', error);
-  }
-
-  send(data) {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(typeof data === 'string' ? data : JSON.stringify(data));
-    }
-  }
-
-  onMessage(handler) {
-    this.handlers.push(handler);
-  }
-
-  disconnect() {
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
-    }
-    this.handlers = [];
-  }
+export function connectWebSocket(userID, sessionID) {
+  const url = `${SERVER_IP}/ws/chat/${userID}/${sessionID}`;
+  return new WebSocket(url);
 }
 
-export default new WebSocketService();
+export function connectMemoryWebSocket(userID, sessionID) {
+  const url = `${SERVER_IP}/ws/memory/${userID}/${sessionID}`;
+  return new WebSocket(url);
+}
+
+export default {
+  connectWebSocket,
+  connectMemoryWebSocket
+};
