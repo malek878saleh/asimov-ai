@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 import httpx
-import config
+import backend.app.config.config as config
 
 router = APIRouter()
 
