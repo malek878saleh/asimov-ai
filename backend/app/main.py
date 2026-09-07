@@ -94,7 +94,7 @@ async def websocket_chat(websocket: WebSocket, user_id: str, session_id: str):
             "type": "connection",
             "status": "connected",
             "message": "AV AI is online",
-            "model": avmodel
+            "model": av.model
         }))
         
         while True:
@@ -117,7 +117,7 @@ async def websocket_chat(websocket: WebSocket, user_id: str, session_id: str):
                 await websocket.send_text(json.dumps({
                     "type": "response",
                     "response": ai_response,
-                    "model": avmodel,
+                    "model": av.model,
                     "user_id": user_id,
                     "session_id": session_id
                 }))
@@ -142,7 +142,7 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "free", "name": "AV AI", "model": avmodel}
+    return {"status": "free", "name": "AV AI", "model": av.model}
 
 from app.api.routes import chat, memory, voice, files
 app.include_router(chat.router, prefix="/api")
