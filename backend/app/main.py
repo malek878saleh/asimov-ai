@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import json
 import httpx
 import asyncio
-import backend.app.config.config as config
+from config.config import MODEL
 from typing import Dict, Set
 
 app = FastAPI(
@@ -42,7 +42,7 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 class AvAI:
-    def __init__(self, base_url: str = "http://localhost:11434", model: str = config.MODEL):
+    def __init__(self, base_url: str = "http://localhost:11434", model: str = MODEL):
         self.base_url = base_url
         self.model = model
         self.client = httpx.AsyncClient(timeout=httpx.Timeout(1200.0, connect=10.0))

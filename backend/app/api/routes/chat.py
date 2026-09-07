@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 import httpx
-import backend.app.config.config as config
+from app.config.config import TIMEOUT, MODEL, ASYSTEM_PROMPT
 
 router = APIRouter()
 
@@ -22,12 +22,12 @@ class ChatResponse(BaseModel):
 async def chat(request: ChatRequest):
     try:
         try:
-            async with httpx.AsyncClient(timeout=config.TIMEOUT) as client:
+            async with httpx.AsyncClient(timeout=TIMEOUT) as client:
                 response = await client.post(
                     "http://localhost:11434/api/generate",
                     json={
-                        "model": config.MODEL,
-                        "prompt": f"{config.ASYSTEM_PROMPT}\n\nUser: {request.message}\n\nAV AI:",
+                        "model": MODEL,
+                        "prompt": f"{ASYSTEM_PROMPT}\n\nUser: {request.message}\n\nAV AI:",
                         "stream": False,
                         "options": {
                             "temperature": 1.0,
@@ -47,7 +47,7 @@ async def chat(request: ChatRequest):
                         user_id=request.user_id,
                         session_id=request.session_id,
                         status="free",
-                        model=config.MODEL
+                        model=MODEL
                     )
         except Exception as e:
             print(f"AV AI error: {e}")
