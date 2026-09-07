@@ -41,7 +41,7 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 class AvAI:
-    def __init__(self, base_url: str = "http://localhost:11434", model: str = "deepseek/deepseek-chat-v3-0324:free"):
+    def __init__(self, base_url: str = "http://localhost:11434", model: str = "huihui_ai/llama3.3-abliterated:70b"):
         self.base_url = base_url
         self.model = model
         self.client = httpx.AsyncClient(timeout=httpx.Timeout(1200.0, connect=10.0))

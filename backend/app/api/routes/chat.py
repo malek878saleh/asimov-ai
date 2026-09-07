@@ -41,7 +41,7 @@ async def chat(request: ChatRequest):
                 response = await client.post(
                     "http://localhost:11434/api/generate",
                     json={
-                        "model": "deepseek/deepseek-chat-v3-0324:free",
+                        "model": "huihui_ai/llama3.3-abliterated:70b",
                         "prompt": f"{ASYSTEM_PROMPT}\n\nUser: {request.message}\n\nAV AI:",
                         "stream": False,
                         "options": {
@@ -62,7 +62,7 @@ async def chat(request: ChatRequest):
                         user_id=request.user_id,
                         session_id=request.session_id,
                         status="free",
-                        model="deepseek/deepseek-chat-v3-0324:free"
+                        model="huihui_ai/llama3.3-abliterated:70b"
                     )
         except Exception as e:
             print(f"AV AI error: {e}")
