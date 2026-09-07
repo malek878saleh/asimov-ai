@@ -112,7 +112,7 @@ async def websocket_chat(websocket: WebSocket, user_id: str, session_id: str):
                     "message": "AV AI is processing..."
                 }))
                 
-                ai_response = await avget_response(user_message)
+                ai_response = await av.get_response(user_message)
                 
                 await websocket.send_text(json.dumps({
                     "type": "response",
