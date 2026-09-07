@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import json
 import httpx
 import asyncio
-from config.config import MODEL
+from app.config.config import MODEL
 from typing import Dict, Set
 
 app = FastAPI(
