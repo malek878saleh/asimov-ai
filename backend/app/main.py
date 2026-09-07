@@ -41,10 +41,10 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 class AsimovAI:
-    def __init__(self, base_url: str = "http://localhost:11434", model: str = "sunapi386/llama-3-lexi-uncensored:8b"):
+    def __init__(self, base_url: str = "http://localhost:11434", model: str = "deepseek/deepseek-chat-v3-0324:free"):
         self.base_url = base_url
         self.model = model
-        self.client = httpx.AsyncClient(timeout=httpx.Timeout(120.0, connect=10.0))
+        self.client = httpx.AsyncClient(timeout=httpx.Timeout(1200.0, connect=10.0))
     
     async def get_response(self, message: str) -> str:
         try:
