@@ -1,4 +1,4 @@
-# Asimov AI - Unrestricted AI Assistant
+# AV AI - Unrestricted AI Assistant
 
 A complete AI assistant with persistent memory, voice capabilities, and a web interface.
 
@@ -27,8 +27,8 @@ A complete AI assistant with persistent memory, voice capabilities, and a web in
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/malek878saleh/asimov-ai.git
-cd asimov-ai
+git clone https://github.com/malek878saleh/av-ai.git
+cd av-ai
 git checkout test2
 ```
 
@@ -53,7 +53,7 @@ Ollama API: http://localhost:11434
 ### Project Structure
 ```
 text
-asimov-ai/
+av-ai/
 ├── backend/
 │   ├── app/
 │   │   ├── api/          # API routes & WebSocket

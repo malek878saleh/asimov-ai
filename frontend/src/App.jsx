@@ -18,14 +18,14 @@ function App() {
 
   const connectWebSocket = () => {
     try {
-      const ws = new WebSocket(`ws://77.237.240.94:8000/ws/chat/asimov/free`);
+      const ws = new WebSocket(`ws://77.237.240.94:8000/ws/chat/av/free`);
       
       ws.onopen = () => {
-        console.log('Connected to Asimov AI');
+        console.log('Connected to AV AI');
         setIsConnected(true);
         setMessages(prev => [...prev, { 
           type: 'system', 
-          content: '🤖 Asimov AI is online - No Limits' 
+          content: 'AV AI is online - No Limits' 
         }]);
       };
 
@@ -38,13 +38,13 @@ function App() {
             setIsThinking(true);
             setMessages(prev => [...prev, { 
               type: 'system', 
-              content: '⏳ Asimov AI is thinking...' 
+              content: '⏳ AV AI is thinking...' 
             }]);
           } else if (data.type === 'response') {
             setIsThinking(false);
             setMessages(prev => {
               // Remove the thinking message
-              const filtered = prev.filter(msg => msg.content !== '⏳ Asimov AI is thinking...');
+              const filtered = prev.filter(msg => msg.content !== '⏳ AV AI is thinking...');
               return [...filtered, { 
                 type: 'assistant', 
                 content: data.response || 'No response' 
@@ -101,7 +101,7 @@ function App() {
     const message = {
       type: 'chat',
       message: input,
-      user_id: 'asimov',
+      user_id: 'av',
       session_id: 'free'
     };
 
@@ -128,7 +128,7 @@ function App() {
         paddingBottom: '15px'
       }}>
         <div>
-          <h1 style={{ margin: 0, color: '#00ff88' }}>🤖 Asimov AI</h1>
+          <h1 style={{ margin: 0, color: '#00ff88' }}>🤖 AV AI</h1>
           <p style={{ margin: 0, color: '#888', fontSize: '12px' }}>No Limits • No Boundaries</p>
         </div>
         <span style={{ 
@@ -151,7 +151,7 @@ function App() {
       }}>
         {messages.length === 0 && (
           <div style={{ textAlign: 'center', color: '#666', marginTop: '180px' }}>
-            💬 Ask Asimov AI anything. No limits.
+            💬 Ask AV AI anything. No limits.
           </div>
         )}
         {messages.map((msg, index) => (
@@ -221,7 +221,7 @@ function App() {
         fontSize: '12px',
         borderTop: '1px solid #222'
       }}>
-        Asimov AI • No Limits • No Boundaries
+        AV AI • No Limits • No Boundaries
       </div>
     </div>
   );
